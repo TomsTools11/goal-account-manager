@@ -10,6 +10,7 @@
     "server": "node server/index.js",
     "build": "vite build",
     "start": "node server/index.js",
+    "local": "vite build && APP_URL=http://localhost:3001 node server/index.js",
     "preview": "vite preview"
   },
   "dependencies": {
