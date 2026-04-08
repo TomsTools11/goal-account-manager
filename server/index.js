@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { google } from 'googleapis';
 import { WebClient } from '@slack/web-api';
-import { Client as NotionClient } from '@notionhq/client';
+// Notion uses REST API directly (SDK v5+ broke databases.query)
 
 // ─── Env ────────────────────────────────────────────────────────────
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -69,7 +69,6 @@ const slack = SLACK_BOT_TOKEN ? new WebClient(SLACK_BOT_TOKEN) : null;
 // ─── Notion Client ──────────────────────────────────────────────────
 const NOTION_API_KEY = process.env.NOTION_API_KEY || '';
 const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID || '';
-const notion = NOTION_API_KEY ? new NotionClient({ auth: NOTION_API_KEY }) : null;
 
 function extractNotionProp(prop) {
   if (!prop) return '';
@@ -190,13 +189,46 @@ async function fetchSlackChannels() {
   return channels;
 }
 
+async function notionApiPost(endpoint, body = {}) {
+  const res = await fetch(`https://api.notion.com/v1${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${NOTION_API_KEY}`,
+      'Notion-Version': '2022-06-28',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Notion API ${res.status}`);
+  }
+  return res.json();
+}
+
+async function notionApiPatch(endpoint, body = {}) {
+  const res = await fetch(`https://api.notion.com/v1${endpoint}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${NOTION_API_KEY}`,
+      'Notion-Version': '2022-06-28',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Notion API ${res.status}`);
+  }
+  return res.json();
+}
+
 async function fetchNotionAccounts() {
-  if (!notion || !NOTION_DATABASE_ID) return [];
+  if (!NOTION_API_KEY || !NOTION_DATABASE_ID) return [];
   const pages = [];
   let cursor;
   do {
-    const res = await notion.databases.query({
-      database_id: NOTION_DATABASE_ID,
+    const res = await notionApiPost(`/databases/${NOTION_DATABASE_ID}/query`, {
       ...(cursor ? { start_cursor: cursor } : {}),
     });
     for (const page of res.results) {
@@ -271,7 +303,7 @@ app.get('/api/health', async (req, res) => {
 // ─── Notion Accounts (live) ─────────────────────────────────────────
 app.get('/api/notion/accounts', async (req, res) => {
   try {
-    if (!notion || !NOTION_DATABASE_ID) {
+    if (!NOTION_API_KEY || !NOTION_DATABASE_ID) {
       return res.json({ results: [], error: 'Notion not configured. Add NOTION_API_KEY and NOTION_DATABASE_ID to .env' });
     }
     const results = await fetchNotionAccounts();
@@ -305,7 +337,7 @@ app.get('/api/notion/search', async (req, res) => {
 app.post('/api/notion/account', async (req, res) => {
   const { name, status, tier, mainContact, accountScore } = req.body;
   try {
-    if (notion && NOTION_DATABASE_ID) {
+    if (NOTION_API_KEY && NOTION_DATABASE_ID) {
       const properties = {
         Name: { title: [{ text: { content: name } }] },
       };
@@ -314,7 +346,7 @@ app.post('/api/notion/account', async (req, res) => {
       if (mainContact) properties['Main Contact'] = { email: mainContact };
       if (accountScore) properties['Account Score'] = { number: parseInt(accountScore) || 0 };
 
-      const page = await notion.pages.create({
+      const page = await notionApiPost('/pages', {
         parent: { database_id: NOTION_DATABASE_ID },
         properties,
       });
@@ -331,12 +363,12 @@ app.post('/api/notion/account', async (req, res) => {
 app.delete('/api/accounts/:name', async (req, res) => {
   const name = decodeURIComponent(req.params.name);
   try {
-    if (notion && NOTION_DATABASE_ID) {
+    if (NOTION_API_KEY && NOTION_DATABASE_ID) {
       // Find the page by name, then archive it
       const accounts = await fetchNotionAccounts();
       const match = accounts.find(a => (a.Name || '').toLowerCase() === name.toLowerCase());
       if (match?._notionId) {
-        await notion.pages.update({ page_id: match._notionId, archived: true });
+        await notionApiPatch(`/pages/${match._notionId}`, { archived: true });
       }
     }
     res.json({ success: true, message: `Account "${name}" deleted.` });
