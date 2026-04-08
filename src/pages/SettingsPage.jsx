@@ -104,7 +104,7 @@ export default function SettingsPage() {
                 <p className="text-caption text-text-muted">{svc.desc}</p>
               </div>
               {svc.key === 'google' && !services.google && (
-                <a href="http://localhost:3001/auth/google" className="btn-primary text-sm flex items-center gap-1.5 no-underline">
+                <a href="/auth/google" className="btn-primary text-sm flex items-center gap-1.5 no-underline">
                   <LogIn size={14} /> Connect Google
                 </a>
               )}

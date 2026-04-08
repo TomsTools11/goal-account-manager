@@ -24,9 +24,15 @@ if (existsSync(envPath)) {
 }
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
+
+// ─── Serve Frontend Build (production) ──────────────────────────────
+const distPath = join(__dirname, '..', 'dist');
+if (existsSync(distPath)) {
+  app.use(express.static(distPath));
+}
 
 // ─── Config ─────────────────────────────────────────────────────────
 const ACCOUNTS_DIR = process.env.ACCOUNTS_DIR || '/Users/tpanos/GOAL/My Accounts';
@@ -262,10 +268,12 @@ app.get('/auth/google/callback', async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
     saveTokens(tokens);
-    res.redirect('http://localhost:5173/settings?connected=google');
+    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+    res.redirect(`${appUrl}/settings?connected=google`);
   } catch (e) {
     console.error('Google OAuth error:', e.message);
-    res.redirect(`http://localhost:5173/settings?error=${encodeURIComponent(e.message)}`);
+    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+    res.redirect(`${appUrl}/settings?error=${encodeURIComponent(e.message)}`);
   }
 });
 
@@ -695,6 +703,13 @@ app.get('/api/account/:name/scan-tasks', async (req, res) => {
 
   res.json({ account: accountName, tasks: unique, count: unique.length });
 });
+
+// ─── SPA Fallback (production) ──────────────────────────────────────
+if (existsSync(distPath)) {
+  app.get('*', (req, res) => {
+    res.sendFile(join(distPath, 'index.html'));
+  });
+}
 
 // ─── Start Server ───────────────────────────────────────────────────
 app.listen(PORT, () => {
