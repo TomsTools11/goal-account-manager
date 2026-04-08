@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Geist font from Vercel */
+@font-face {
+  font-family: 'Geist';
+  src: url('https://cdn.jsdelivr.net/npm/geist@1.2.0/dist/fonts/geist-sans/Geist-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist';
+  src: url('https://cdn.jsdelivr.net/npm/geist@1.2.0/dist/fonts/geist-sans/Geist-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist';
+  src: url('https://cdn.jsdelivr.net/npm/geist@1.2.0/dist/fonts/geist-sans/Geist-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist';
+  src: url('https://cdn.jsdelivr.net/npm/geist@1.2.0/dist/fonts/geist-sans/Geist-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    @apply bg-brand-bg text-text-secondary font-body antialiased;
+    min-height: 100vh;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-text-primary;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-border rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-hover;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-brand-surface border border-brand-border rounded-xl p-5 transition-all duration-200;
+  }
+  .card:hover {
+    @apply bg-brand-elevated shadow-lg;
+  }
+  .btn-primary {
+    @apply bg-brand-blue text-text-primary px-4 py-2 rounded-lg font-medium text-sm
+           hover:bg-brand-blue-hover active:scale-[0.98] transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2 focus:ring-offset-brand-bg;
+  }
+  .btn-secondary {
+    @apply bg-brand-surface text-text-primary px-4 py-2 rounded-lg font-medium text-sm
+           border border-brand-border hover:bg-brand-hover hover:border-brand-blue
+           transition-all duration-150;
+  }
+  .btn-ghost {
+    @apply text-text-muted px-3 py-1.5 rounded-lg text-sm
+           hover:bg-brand-elevated hover:text-text-primary transition-all duration-150;
+  }
+  .input {
+    @apply bg-brand-form text-text-secondary border border-brand-border rounded-lg px-3 py-2
+           text-sm placeholder:text-text-dim
+           focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/20
+           transition-all duration-150;
+  }
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium;
+  }
+  .badge-blue { @apply bg-brand-blue/20 text-brand-blue; }
+  .badge-green { @apply bg-brand-success/20 text-brand-success; }
+  .badge-orange { @apply bg-brand-warning/20 text-brand-warning; }
+  .badge-red { @apply bg-brand-error/20 text-brand-error; }
+  .badge-gray { @apply bg-brand-hover/50 text-text-muted; }
+
+  .status-incoming { @apply bg-text-dim/20 text-text-muted; }
+  .status-onboarding { @apply bg-pink-500/20 text-pink-400; }
+  .status-implementation { @apply bg-brand-warning/20 text-brand-warning; }
+  .status-adoption { @apply bg-brand-blue/20 text-brand-blue; }
+  .status-expansion { @apply bg-brand-success/20 text-brand-success; }
+  .status-lost { @apply bg-brand-error/20 text-brand-error; }
+}
