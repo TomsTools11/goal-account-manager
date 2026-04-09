@@ -8,6 +8,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
+      workbox: {
+        navigateFallbackDenylist: [/^\/auth\//]
+      },
       manifest: {
         name: 'GOAL Account Manager',
         short_name: 'GOAL AM',
